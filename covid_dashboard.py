@@ -223,12 +223,24 @@ st.divider()
 
 # ---- Visualização 1: Evolução de casos novos ao longo do tempo ------------
 st.subheader("1) Evolução de casos novos ao longo do tempo")
+# new_cases vem em lotes (muitos zeros + picos semanais), o que faz a linha
+# oscilar de 0 ao pico repetidamente, parecendo barras. Aplicamos uma média
+# móvel de 7 dias por país para suavizar a curva.
+dados_linha = dados.sort_values("date").copy()
+dados_linha["new_cases_7d"] = (
+    dados_linha.groupby("location")["new_cases"]
+    .transform(lambda s: s.rolling(7, min_periods=1).mean())
+)
 fig1 = px.line(
-    dados,
+    dados_linha,
     x="date",
-    y="new_cases",
+    y="new_cases_7d",
     color="location",
-    labels={"date": "Data", "new_cases": "Novos casos", "location": "País"},
+    labels={
+        "date": "Data",
+        "new_cases_7d": "Novos casos (média 7 dias)",
+        "location": "País",
+    },
 )
 st.plotly_chart(fig1, use_container_width=True)
 
